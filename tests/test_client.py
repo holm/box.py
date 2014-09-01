@@ -914,6 +914,32 @@ class TestClient(unittest.TestCase):
                                  can_preview=False)
         self.assertEqual('http://www.foo.org/bla?x=y', link)
 
+    def test_share_link_to_folder(self):
+        # defaults
+        args = {
+            'access': 'open'
+        }
+
+        client = self.make_client("put", "folders/123", data={'shared_link': args}, result={'shared_link': 'http://www.foo.org/bla?x=y'})
+        link = client.share_link_to_folder(123)
+        self.assertEqual('http://www.foo.org/bla?x=y', link)
+
+        # with expiration time
+        args = {
+            'permissions': {
+                'can_preview': False,
+                'can_download': False,
+            },
+            'access': 'company',
+            'unshared_at': '2006-05-04T03:02:01+00:00'
+        }
+        client = self.make_client("put", "folders/123", data={'shared_link': args}, result={'shared_link': 'http://www.foo.org/bla?x=y'})
+        link = client.share_link_to_folder(123, access=ShareAccess.COMPANY,
+                                           expire_at=datetime(2006, 5, 4, 3, 2, 1, 0, tzinfo=UTC()),
+                                           can_download=False,
+                                           can_preview=False)
+        self.assertEqual('http://www.foo.org/bla?x=y', link)
+
     def test_get_events(self):
         # defaults
         args = {

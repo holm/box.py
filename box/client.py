@@ -477,6 +477,37 @@ class BoxClient(object):
         """
         return self._request("get", 'folders/{0}/collaborations'.format(folder_id)).json()
 
+    def share_link_to_folder(self, folder_id, access=ShareAccess.OPEN, expire_at=None, can_download=None, can_preview=None):
+        """
+        Creates a share link for the folder_id
+        Args:
+            - folder_id: the id of the folder we want to share
+            - access: one of the values of ShareAccess
+            - expire_at: (optional) a datetime representing the time the link will expire. Timestamps are rounded off
+              to the given day.
+            - can_download: Whether this link allows downloads. Can only be used with Open and Company
+            - can_preview: Whether this link allows previewing. Can only be used with Open and Company
+
+        Returns:
+            - a dictionary containing the various urls. Example:
+            {
+                "url": "https://www.box.com/s/rh935iit6ewrmw0unyul",
+                "download_url": "https://www.box.com/shared/static/rh935iit6ewrmw0unyul.jpeg",
+                "vanity_url": null,
+                "is_password_enabled": false,
+                "unshared_at": null,
+                "download_count": 0,
+                "preview_count": 0,
+                "access": "open",
+                "permissions": {
+                    "can_download": true,
+                    "can_preview": true
+                }
+            }
+        """
+
+        return self._share_link('folders/{0}'.format(folder_id), access=access, expire_at=expire_at, can_download=can_download, can_preview=can_preview)
+
     def get_file_metadata(self, file_id):
         """
         Fetches the metadata of the given file_id
@@ -715,6 +746,13 @@ class BoxClient(object):
                 }
             }
         """
+
+        return self._share_link('files/{0}'.format(file_id), access=access, expire_at=expire_at, can_download=can_download, can_preview=can_preview)
+
+    def _share_link(self, path, access=ShareAccess.OPEN, expire_at=None, can_download=None, can_preview=None):
+        """
+        Creates a share link for the given path
+        """
         data = {
             'access': access
         }
@@ -729,7 +767,7 @@ class BoxClient(object):
         if expire_at:
             data['unshared_at'] = expire_at.isoformat()
 
-        result = self._request("put", 'files/{0}'.format(file_id), data={'shared_link': data}).json()
+        result = self._request("put", path, data={'shared_link': data}).json()
         return result['shared_link']
 
     def get_events(self, stream_position='0', stream_type=EventFilter.ALL, limit=1000):
